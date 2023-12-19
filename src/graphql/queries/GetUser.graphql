@@ -1,0 +1,20 @@
+query GetUser($userId: ID!) {
+  getUser(id: $userId) {
+    id
+    firstName
+    lastName
+    email
+    phone
+    address
+    products {
+      id
+      title
+    }
+    transactions {
+      id
+    }
+    rentals {
+      id
+    }
+  }
+}

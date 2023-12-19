@@ -1,0 +1,16 @@
+query GetAllProducts {
+  getAllProducts {
+    id
+    title
+    categories
+    description
+    price
+    rentPrice
+    rentOption
+    owner {
+      id
+      firstName
+    }
+    createdAt
+  }
+}
