@@ -1,7 +1,7 @@
 import c from "classnames";
 
 interface LoadingProps {
-    className: string
+    className?: string
 }
 
 const Loading = ({ className }: LoadingProps) => {

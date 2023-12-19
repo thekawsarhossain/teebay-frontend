@@ -1,23 +1,40 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { Fragment, useState } from 'react';
 import Button from './common/Button';
+import { IProduct } from '../interfaces/IProduct';
+import { Reference, StoreObject, useMutation } from '@apollo/client';
+import { DELETE_PRODUCT } from '../graphql/mutations';
+import { GET_USER_PRODUCTS } from '../graphql/queries';
+import { CATEGORIES } from '../constants/categories';
+import { RENT_OPTIONS } from '../constants/rentOptions';
 
-const Product = () => {
+interface SelectedProduct {
+    id: string;
+    ownerId: string
+}
+
+const Product = ({ product, userId }: { product: IProduct, userId: string }) => {
     const [isOpenDeleteModal, setOpenDeleteModal] = useState(false);
+    const [selectedForDelete, setSelected] = useState<SelectedProduct>({ id: "", ownerId: "" });
+
+    const { id, title, description, price, rentPrice, rentOption, categories, createdAt, owner } = product || {};
 
     return (
         <div className='border p-10'>
             <div className="flex justify-between items-center">
-                <h2 className="text-xl">Cricket Kit</h2>
-                <button onClick={() => setOpenDeleteModal(true)}>
+                <h2 className="text-xl">{title}</h2>
+                {userId === owner.id && <button onClick={() => {
+                    setSelected({ id, ownerId: owner.id })
+                    setOpenDeleteModal(true);
+                }}>
                     <img src="/images/delete.png" alt="delete" className="w-10 h-10" />
-                </button>
+                </button>}
             </div>
-            <p className="text-gray-500 mt-4">Categories: Sporting Goods, Outdoor</p>
-            <p className="text-gray-500 my-3">Price: $500 | Rent: $100 daily</p>
-            <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eligendi quisquam, pariatur repellendus fuga repellat deleniti cumque iste perferendis dolorem fugit distinctio commodi doloribus est consectetur inventore natus vero ex quo!</p>
-            <p className="text-sm text-gray-500 mt-6">Date posted: 21st August 2023</p>
-            <DeleteProductDialog isOpen={isOpenDeleteModal} close={() => setOpenDeleteModal(false)} />
+            <p className="text-gray-500 mt-4">Categories: {categories.map((category) => CATEGORIES[category]).join(", ")}</p>
+            <p className="text-gray-500 my-3">Price: ${price} | Rent: ${rentPrice} {RENT_OPTIONS[rentOption]}</p>
+            <p>{description}</p>
+            <p className="text-sm text-gray-500 mt-6">Date posted: {new Date(Number(createdAt)).toDateString()}</p>
+            <DeleteProductDialog isOpen={isOpenDeleteModal} selectedProduct={selectedForDelete} close={() => setOpenDeleteModal(false)} />
         </div>
     );
 };
@@ -27,9 +44,38 @@ export default Product;
 interface Props {
     isOpen: boolean;
     close: () => void;
+    selectedProduct: SelectedProduct;
 }
 
-function DeleteProductDialog({ isOpen, close }: Props) {
+function DeleteProductDialog({ isOpen, selectedProduct, close }: Props) {
+    const [deleteProduct, { loading }] = useMutation(DELETE_PRODUCT);
+
+    const handleDelete = () => {
+        deleteProduct({
+            variables: { productId: selectedProduct.id },
+            update(cache) {
+                cache.modify({
+                    id: cache.identify({
+                        __typename: 'Product',
+                        id: selectedProduct.id,
+                    }),
+                    fields: {
+                        products(existingProducts = [], { readField }) {
+                            return existingProducts.filter(
+                                (productRef: Reference | StoreObject | undefined) => selectedProduct.id !== readField('id', productRef)
+                            );
+                        },
+                    },
+                });
+            },
+            refetchQueries: [{ query: GET_USER_PRODUCTS, variables: { userId: selectedProduct.ownerId } }],
+        })
+            .then(() => close())
+            .catch(err => {
+                console.log("Delete product error", err)
+            });
+    };
+
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-10" onClose={close}>
@@ -66,7 +112,7 @@ function DeleteProductDialog({ isOpen, close }: Props) {
 
                                 <div className="mt-4 flex items-center space-x-4 justify-end">
                                     <Button kind='danger' onClick={close}>No</Button>
-                                    <Button>Yes</Button>
+                                    <Button loading={loading} onClick={handleDelete}>Yes</Button>
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>

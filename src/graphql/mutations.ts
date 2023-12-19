@@ -19,3 +19,24 @@ export const REGISTER_USER = gql`mutation RegisterUser($user: RegisterUserInput!
     phone
   }
 }`
+
+export const ADD_PRODUCT = gql`
+mutation AddProduct($product: AddProductInput!) {
+  addProduct(product: $product) {
+    id
+    title
+    categories
+    description
+    price
+    rentPrice
+    rentOption
+    createdAt
+  }
+}
+`
+
+export const DELETE_PRODUCT = gql`mutation DeleteProduct($productId: ID!) {
+    deleteProduct(productId: $productId) {
+      id
+    }
+  }`
