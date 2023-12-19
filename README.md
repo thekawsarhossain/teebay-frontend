@@ -1,4 +1,4 @@
-# Teebay Backend
+# Teebay Frontend
 
 ## Getting Started
 
