@@ -39,8 +39,8 @@ const Home = () => {
             </div>
 
             {/* list my products */}
-            <div className="container mx-auto p-10">
-                <h2 className="text-2xl font-medium mb-6 uppercase text-black text-center">
+            <div className="container mx-auto p-0 md:p-10">
+                <h2 className="text-2xl font-medium my-6 uppercase text-black text-center">
                     MY PRODUCTS
                 </h2>
                 {loading ? <Loading className="w-8 h-8" />

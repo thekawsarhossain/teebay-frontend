@@ -46,14 +46,14 @@ const DashboardProducts = ({ type }: Props) => {
     }, [data, productsKey]);
 
     return (
-        <div className="container mx-auto p-10">
+        <div className="container mx-auto p-4 md:p-10">
             {loading ? (
                 <Loading className="w-8 h-8" />
             ) : (
                 <div className="flex flex-col space-y-4">
                     {products?.length ? (
                         products?.map((product: IProduct) => (
-                            <Product key={product.id} userId={user?.id} product={product} />
+                            <Product key={`dashboard__${type}__${product.id}`} userId={user?.id} product={product} />
                         ))
                     ) : (
                         <p className="text-gray-900 text-center text-xl my-10">

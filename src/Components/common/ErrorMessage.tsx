@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import c from "classnames";
 import { ApolloError } from "@apollo/client";
@@ -19,7 +20,7 @@ const parseApolloError = (error: ApolloError): string => {
     let errorMessage = "An error occurred.";
 
     if (error?.graphQLErrors?.length > 0) {
-        const extensions = error?.graphQLErrors?.[0]?.extensions as GraphQLErrorExtensions;
+        const extensions = (error as unknown as any)?.graphQLErrors?.[0]?.extensions as GraphQLErrorExtensions;
         if (extensions?.errorSources?.length > 0) {
             const errorSource = extensions.errorSources[0];
             if (errorSource && typeof errorSource.message === 'string') {
@@ -32,7 +33,7 @@ const parseApolloError = (error: ApolloError): string => {
 
 
 const ErrorMessage: React.FC<ErrorMessageProps> = ({ error, className }) => {
-    const errorMessage = parseApolloError(error);
+    const errorMessage = parseApolloError(error as unknown as any);
     return <p className={c(className, "text-red-600 text-sm")}>{errorMessage}</p>;
 };
 

@@ -20,7 +20,7 @@ const AllProducts = () => {
     return (
         <div className="p-4">
             {/* list all products */}
-            <div className="container mx-auto p-10">
+            <div className="container mx-auto p-0 md:p-10">
                 <h2 className="text-2xl font-medium mb-6 uppercase text-black text-center">
                     ALL PRODUCTS
                 </h2>

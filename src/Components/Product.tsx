@@ -23,7 +23,7 @@ const Product = ({ product, userId, to }: { product: IProduct, userId: string, t
     const { id, title, description, price, rentPrice, rentOption, categories, createdAt, owner } = product || {};
 
     return (
-        <div className='relative border p-10'>
+        <div className='relative border p-4 md:p-10'>
             <Link to={to ? `/${to}/${id}` : ""} className='max-w-fit'>
                 <h2 className="text-xl">{title}</h2>
 
