@@ -29,9 +29,9 @@ const MultiSelect: React.FC<MultiSelectProps> = ({ options, selectedOptions, set
                             onClick={() => setIsOpen(!isOpen)}
                         >
                             <div className="flex flex-auto flex-wrap">
-                                {selectedOptions.map((option) => (
+                                {selectedOptions.map((option, index) => (
                                     <div
-                                        key={option.key}
+                                        key={`multi_select__${option.key}__${index}`}
                                         className="flex justify-center items-center m-1 font-medium py-1 px-2 bg-white border border-gray-300 rounded"
                                     >
                                         <div className="text-xs font-normal leading-none max-w-full flex-initial">{option.value}</div>
@@ -84,7 +84,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({ options, selectedOptions, set
                                 <div className="flex flex-col w-full">
                                     {Object.entries(options || {}).map(([key, value]) => (
                                         <div
-                                            key={key}
+                                            key={`multi_select__${key}__${value}`}
                                             className={`cursor-pointer w-full border-gray-100 ${selectedOptions.find((option) => option.key === key) ? 'hidden' : ''
                                                 }`}
                                             onClick={() => handleSelect(key, value)}

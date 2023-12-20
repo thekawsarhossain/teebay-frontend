@@ -18,16 +18,16 @@ const CreateProduct = () => {
     const navigate = useNavigate();
 
     const [step, setStep] = useState(1);
-    const nextStep = () => setStep(step + 1);
-    const prevStep = () => setStep(step - 1);
+    const nextStep = (e: { preventDefault: () => void; }) => {
+        e.preventDefault();
+        setStep(step + 1);
+    }
+    const prevStep = (e: { preventDefault: () => void; }) => {
+        e.preventDefault();
+        setStep(step - 1);
+    }
 
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        price: 0,
-        rentPrice: 0,
-        rentOption: ''
-    });
+    const [formData, setFormData] = useState({ title: '', description: '', price: 0, rentPrice: 0, rentOption: '' });
     const [selectedCategories, setSelectedCategories] = useState<{ key: string; value: string }[]>([]);
 
     const handleChange = (e: { target: { name: string; value: string | number; }; }) => {
@@ -45,17 +45,13 @@ const CreateProduct = () => {
 
         addProduct({
             variables: { product: { ...data, ...prices, categories: (selectedCategories.map(category => category.key)), ownerId: user.id } },
-            update: (cache, { data: { addProduct } }) => {
-                const currentData: { products: IProduct[] } = cache.readQuery({ query: GET_USER_PRODUCTS }) || { products: [] };
-
-                let products: IProduct[] = [];
-                if (currentData && currentData?.products) {
-                    products = [...currentData.products];
-                }
+            update: async (cache, { data: { addProduct } }) => {
+                const currentData = cache.readQuery({ query: GET_USER_PRODUCTS, variables: { userId: user?.id } });
                 cache.writeQuery({
                     query: GET_USER_PRODUCTS,
+                    variables: { userId: user?.id },
                     data: {
-                        products: [...products, addProduct],
+                        getUserProducts: [...(currentData as { getUserProducts: IProduct[] })?.getUserProducts ?? [], addProduct],
                     },
                 });
             },
@@ -87,7 +83,7 @@ const CreateProduct = () => {
                             )}
                         </FormField>
                         <div className='flex justify-end'>
-                            <Button disabled={!formData.title} type='button' className='mt-10' onClick={nextStep}>Next</Button>
+                            <Button disabled={!formData.title} className='mt-10' onClick={nextStep}>Next</Button>
                         </div>
                     </div>
                 );
@@ -99,8 +95,8 @@ const CreateProduct = () => {
                             <MultiSelect options={CATEGORIES} setSelectedOptions={setSelectedCategories} selectedOptions={selectedCategories} />
                         </div>
                         <div className='mt-10 flex justify-between'>
-                            <Button type='button' onClick={prevStep}>Back</Button>
-                            <Button disabled={!selectedCategories.length} type='button' onClick={nextStep}>Next</Button>
+                            <Button onClick={prevStep}>Back</Button>
+                            <Button disabled={!selectedCategories.length} onClick={nextStep}>Next</Button>
                         </div>
                     </div>
                 );
@@ -127,8 +123,8 @@ const CreateProduct = () => {
                             )}
                         </FormField>
                         <div className='mt-10 flex justify-between'>
-                            <Button type='button' onClick={prevStep}>Back</Button>
-                            <Button disabled={!formData.description} type='button' onClick={nextStep}>Next</Button>
+                            <Button onClick={prevStep}>Back</Button>
+                            <Button disabled={!formData.description} onClick={nextStep}>Next</Button>
                         </div>
                     </div>
                 );
@@ -189,7 +185,7 @@ const CreateProduct = () => {
                                             >
                                                 <option value="" hidden>Select option</option>
                                                 {Object.entries(RENT_OPTIONS || {}).map(([key, value]) => (
-                                                    <option key={key} value={key}>{value}</option>
+                                                    <option key={`rent_option__${key}__${value}`} value={key}>{value}</option>
                                                 ))}
                                             </select>
                                             {errors && (<p className="text-xs text-error-red">{errors.message}</p>)}
@@ -199,8 +195,8 @@ const CreateProduct = () => {
                             </div>
                         </div>
                         <div className='mt-10 flex justify-between'>
-                            <Button type='button' onClick={prevStep}>Back</Button>
-                            <Button disabled={!formData.price || !formData.rentPrice || !formData.rentOption} type='button' onClick={nextStep}>Next</Button>
+                            <Button onClick={prevStep}>Back</Button>
+                            <Button disabled={!formData.price || !formData.rentPrice || !formData.rentOption} onClick={nextStep}>Next</Button>
                         </div>
                     </div>
                 );
@@ -210,13 +206,16 @@ const CreateProduct = () => {
                         <h2 className='text-gray-900 text-xl md:text-3xl font-semibold'>Summary</h2>
                         <div className='flex flex-col space-y-4 mt-6'>
                             <span>Title: {formData.title}</span>
-                            <span>Categories: {selectedCategories?.map((category) => category.value).join(", ")}</span>
+
+                            <span>Categories: {selectedCategories?.map((category, index) => <span key={`create_product__${category}__${index}`} className='mr-2'>{`${category.value}${selectedCategories.length - 1 !== index ? "," : ""}`}</span>)}</span>
+
                             <span>Description: {formData.description}</span>
+
                             <span>price: ${formData.price}, To rent: {formData.rentPrice} per {(RENT_OPTIONS as unknown as never)[formData.rentOption]}</span>
                         </div>
                         {(error) && <ErrorMessage className='mt-4' error={error} />}
                         <div className='mt-10 flex justify-between'>
-                            <Button type='button' onClick={prevStep}>Back</Button>
+                            <Button onClick={prevStep}>Back</Button>
                             <Button disabled={loading} loading={loading} type='submit'>Submit</Button>
                         </div>
                     </div>

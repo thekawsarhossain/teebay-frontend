@@ -5,7 +5,6 @@ import { GET_ALL_PRODUCTS } from "../graphql/queries";
 import Loading from "../Components/common/Loading";
 import { IProduct } from "../interfaces/IProduct";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 
 const AllProducts = () => {
     const { user } = useAuth();
@@ -28,9 +27,7 @@ const AllProducts = () => {
                 {loading ? <Loading className="w-8 h-8" />
                     : <div className="flex flex-col space-y-4">
                         {products?.length ? products?.map((product: IProduct) => (
-                            <Link key={`all_poducts_${product.id}`} to={`/product/${product.id}`}>
-                                <Product userId={user.id} product={product} />
-                            </Link>
+                            <Product key={`all_poducts_${product.id}`} userId={user.id} product={product} to={"product"} />
                         )) : <p className="text-gray-900 text-center text-xl my-10">No products found!</p>
                         }
                     </div>

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Button from "../Components/common/Button";
 import client from "../config/apolloClient";
 import Product from "../Components/Product";
@@ -45,7 +45,7 @@ const Home = () => {
                 {loading ? <Loading className="w-8 h-8" />
                     : <div className="flex flex-col space-y-4">
                         {products?.length ? products?.map((product: IProduct) => (
-                            <Link key={product.id} to={`/edit-product/${product.id}`}><Product userId={user?.id} product={product} /></Link>
+                            <Product key={product.id} userId={user?.id} product={product} to={"edit-product"} />
                         )) : <p className="text-gray-900 text-center text-xl my-10">No products found!</p>
                         }
                     </div>

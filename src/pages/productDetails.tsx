@@ -42,7 +42,6 @@ const ProductDetails = () => {
                 </div>
             }
         </div>
-
     );
 };
 

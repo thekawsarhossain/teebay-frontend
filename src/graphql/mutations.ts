@@ -35,6 +35,18 @@ mutation AddProduct($product: AddProductInput!) {
 }
 `
 
+export const EDIT_PRODUCT = gql`mutation EditProduct($productId: ID!, $product: EditProductInput!) {
+    editProduct(productId: $productId, product: $product) {
+      id
+      title
+      categories
+      description
+      price
+      rentPrice
+      rentOption
+    }
+  }`
+
 export const DELETE_PRODUCT = gql`mutation DeleteProduct($productId: ID!) {
     deleteProduct(productId: $productId) {
       id

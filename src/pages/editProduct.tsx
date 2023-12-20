@@ -1,63 +1,84 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Form, FormField, FormInputFuncProps } from "../Components/common/Form";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MultiSelect from "../Components/common/MultiSelect";
 import { CATEGORIES } from "../constants/categories";
 import { RENT_OPTIONS } from "../constants/rentOptions";
 import Button from "../Components/common/Button";
-import { useQuery } from "@apollo/client";
-import { GET_PRODUCT } from "../graphql/queries";
+import { useMutation, useQuery } from "@apollo/client";
+import { GET_PRODUCT, GET_USER_PRODUCTS } from "../graphql/queries";
 import Loading from "../Components/common/Loading";
+import { arraysEqual } from "../utils/common";
+import { ICategories, IProduct } from "../interfaces/IProduct";
+import ErrorMessage from "../Components/common/ErrorMessage";
+import { EDIT_PRODUCT } from "../graphql/mutations";
+import useAuth from "../hooks/authCheck";
 
 const EditProduct = () => {
+    const { user } = useAuth();
     const { productId } = useParams();
+    const navigate = useNavigate();
 
-    const { loading: productLoading, data: oldProductData } = useQuery(GET_PRODUCT, {
+    const { loading: productLoading, data: productData } = useQuery(GET_PRODUCT, {
         variables: { id: productId },
         skip: !productId,
     });
 
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        price: 0,
-        rentPrice: 0,
-        rentOption: ''
-    });
+    const [editProduct, { loading, error }] = useMutation(EDIT_PRODUCT);
+
+    const [disableEditBtn, setDisable] = useState(false);
     const [selectedCategories, setSelectedCategories] = useState<{ key: string; value: string }[]>([]);
+    const [formData, setFormData] = useState({ title: '', description: '', price: 0, rentPrice: 0, rentOption: '' });
+
+    const product = useMemo(() => {
+        if (!productData?.getProduct?.id) return {};
+        return productData?.getProduct;
+    }, [productData?.getProduct]);
 
     useEffect(() => {
-        oldProductData?.getProduct?.categories?.forEach((category: string) => {
-            setSelectedCategories([...selectedCategories, { key: category, value: CATEGORIES[category] }]);
+        const { title, description, categories, price, rentPrice, rentOption } = product as IProduct || {};
+        categories?.forEach((category: string) => {
+            setSelectedCategories([...selectedCategories, { key: category, value: (CATEGORIES as unknown as ICategories)[category as unknown as number] }]);
         });
+        setFormData({ title, description, price, rentPrice, rentOption })
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [oldProductData?.getProduct?.categories])
+    }, [product]);
+
+    useEffect(() => {
+        const prevCategories = product?.categories?.map((category: string) => ({ key: category, value: (CATEGORIES as unknown as ICategories)[category as unknown as number] }));
+
+        if (formData.title === product.title && formData.description === product.description &&
+            formData.price === product.price && formData.rentPrice === product.rentPrice &&
+            formData.rentOption === product.rentOption && !arraysEqual(selectedCategories, prevCategories)
+        ) setDisable(true);
+        else setDisable(false)
+    }, [formData, product, selectedCategories])
 
     const handleSubmit = async (data: Record<string, string>) => {
-        console.log(data)
-        // const prices = {
-        //     price: Number(parseFloat(data.price).toFixed(2)),
-        //     rentPrice: Number(parseFloat(data.rentPrice).toFixed(2))
-        // };
+        const prices = {
+            price: Number(parseFloat(data.price).toFixed(2)),
+            rentPrice: Number(parseFloat(data.rentPrice).toFixed(2))
+        };
 
-        // // addProduct({
-        // //     variables: { product: { ...data, ...prices, categories: (selectedCategories.map(category => category.key)), ownerId: user.id } },
-        // //     update: (cache, { data: { addProduct } }) => {
-        // //         const currentData: { products: IProduct[] } = cache.readQuery({ query: GET_USER_PRODUCTS }) || { products: [] };
+        editProduct({
+            variables: { productId, product: { ...data, ...prices, categories: (selectedCategories.map(category => category.key)) } },
+            update: (cache, { data: { editProduct } }) => {
+                const currentData: { getUserProducts: IProduct[] } = cache.readQuery({ query: GET_USER_PRODUCTS, variables: { userId: user?.id } }) || { getUserProducts: [] };
+                const editedProductIndex = currentData.getUserProducts?.findIndex(product => product.id === editProduct.id);
 
-        // //         let products: IProduct[] = [];
-        // //         if (currentData && currentData?.products) {
-        // //             products = [...currentData.products];
-        // //         }
-        // //         cache.writeQuery({
-        // //             query: GET_USER_PRODUCTS,
-        // //             data: {
-        // //                 products: [...products, addProduct],
-        // //             },
-        // //         });
-        // //     },
-        // // })
-        // //     .then(() => navigate("/"))
+                const updatedProducts = [...currentData.getUserProducts];
+                updatedProducts[editedProductIndex] = editProduct;
+
+                cache.writeQuery({
+                    query: GET_USER_PRODUCTS,
+                    variables: { userId: user?.id },
+                    data: {
+                        getUserProducts: updatedProducts,
+                    },
+                });
+            },
+        })
+            .then(() => navigate("/"))
     };
 
     const handleChange = (e: { target: { name: string; value: string | number; }; }) => {
@@ -74,7 +95,7 @@ const EditProduct = () => {
                 <div className="h-screen flex items-center justify-center">
                     <Loading className="w-8 h-8" />
                 </div> :
-                <Form model={{ ...oldProductData?.getProduct }} onSubmit={handleSubmit} className="flex flex-col items-center justify-center h-screen px-2 md:px-0">
+                <Form onSubmit={handleSubmit} className="flex flex-col items-center justify-center h-screen px-2 md:px-0">
                     <div className="w-full">
                         <label>Title</label>
                         <FormField
@@ -87,6 +108,7 @@ const EditProduct = () => {
                                     <input
                                         {...props}
                                         onChange={handleChange}
+                                        defaultValue={product?.title}
                                         className={`shadow-sm block px-3 py-2 border rounded-md placeholder-gray-400 sm:text-sm focus:outline-none focus:border-indigo-600 ${errors ? "border-red-600" : ""}`}
                                     />
                                     {errors && (<p className="text-xs text-error-red">{errors.message}</p>)}
@@ -112,6 +134,7 @@ const EditProduct = () => {
                                         {...props}
                                         rows={10}
                                         onChange={handleChange}
+                                        defaultValue={product?.description}
                                         className={`shadow-sm block px-3 py-2 border rounded-md placeholder-gray-400 sm:text-sm focus:outline-none focus:border-indigo-600 ${errors ? "border-red-600" : ""}`}
                                     >
                                     </textarea>
@@ -135,6 +158,7 @@ const EditProduct = () => {
                                         min={0}
                                         step="0.01"
                                         onChange={handleChange}
+                                        defaultValue={product?.price}
                                         className={`shadow-sm block px-3 py-2 border rounded-md placeholder-gray-400 sm:text-sm focus:outline-none focus:border-indigo-600 ${errors ? "border-red-600" : ""}`}
                                     />
                                 )}
@@ -154,6 +178,7 @@ const EditProduct = () => {
                                         min={0}
                                         step="0.01"
                                         onChange={handleChange}
+                                        defaultValue={product?.rentPrice}
                                         className={`shadow-sm block px-3 py-2 border rounded-md placeholder-gray-400 sm:text-sm focus:outline-none focus:border-indigo-600 ${errors ? "border-red-600" : ""}`}
                                     />
                                 )}
@@ -171,19 +196,21 @@ const EditProduct = () => {
                                     <select
                                         {...props}
                                         onChange={handleChange}
+                                        defaultValue={product?.rentOption}
                                         className={`shadow-sm block px-3 py-2 border rounded-md placeholder-gray-400 sm:text-sm focus:outline-none focus:border-indigo-600 ${errors ? "border-red-600" : ""}`}
                                     >
                                         <option value="" hidden>Select option</option>
                                         {Object.entries(RENT_OPTIONS || {}).map(([key, value]) => (
-                                            <option key={key} value={key}>{value}</option>
+                                            <option key={`edit_product__rent_option__${key}__${value}`} defaultValue={product?.rentOption} value={key}>{value}</option>
                                         ))}
                                     </select>
                                 )}
                             </FormField>
                         </div>
                     </div>
+                    {(error) && <ErrorMessage className='mt-4 w-full' error={error} />}
                     <div className='mt-10 flex justify-end w-full'>
-                        <Button type='submit'>Edit Product</Button>
+                        <Button disabled={disableEditBtn || !selectedCategories.length || loading} loading={loading} type='submit'>Edit Product</Button>
                     </div>
                 </Form>
             }
