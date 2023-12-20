@@ -47,7 +47,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({ options, selectedOptions, set
                                                     strokeWidth="2"
                                                     strokeLinecap="round"
                                                     strokeLinejoin="round"
-                                                    className="feather feather-x cursor-pointer hover:text-teal-400 rounded-full w-4 h-4 ml-2"
+                                                    className="feather feather-x cursor-pointer hover:text-indigo-600 rounded-full w-4 h-4 ml-2"
                                                 >
                                                     <line x1="18" y1="6" x2="6" y2="18"></line>
                                                     <line x1="6" y1="6" x2="18" y2="18"></line>
