@@ -9,13 +9,14 @@ import { CATEGORIES } from '../constants/categories';
 import { RENT_OPTIONS } from '../constants/rentOptions';
 import Modal from './common/Modal';
 import { Link } from 'react-router-dom';
+import ErrorMessage from './common/ErrorMessage';
 
 interface SelectedProduct {
     id: string;
     ownerId: string
 }
 
-const Product = ({ product, userId, to }: { product: IProduct, userId: string, to: string }) => {
+const Product = ({ product, userId, to }: { product: IProduct, userId: string, to?: string }) => {
     const [isOpenDeleteModal, setOpenDeleteModal] = useState(false);
     const [selectedForDelete, setSelected] = useState<SelectedProduct>({ id: "", ownerId: "" });
 
@@ -23,7 +24,7 @@ const Product = ({ product, userId, to }: { product: IProduct, userId: string, t
 
     return (
         <div className='relative border p-10'>
-            <Link to={`/${to}/${id}`} className='max-w-fit'>
+            <Link to={to ? `/${to}/${id}` : ""} className='max-w-fit'>
                 <h2 className="text-xl">{title}</h2>
 
                 <p className="text-gray-500 mt-4">Categories: {categories.map((category, index) => <span key={`product__${category}__${index}`} className='mr-2'>{`${CATEGORIES[category]}${categories.length - 1 !== index ? "," : ""}`}</span>)}</p>
@@ -54,7 +55,7 @@ interface Props {
 }
 
 function DeleteProductDialog({ isOpen, selectedProduct, close }: Props) {
-    const [deleteProduct, { loading }] = useMutation(DELETE_PRODUCT);
+    const [deleteProduct, { loading, error }] = useMutation(DELETE_PRODUCT);
 
     const handleDelete = () => {
         deleteProduct({
@@ -92,6 +93,8 @@ function DeleteProductDialog({ isOpen, selectedProduct, close }: Props) {
             >
                 Are you sure you want to delete this product?
             </Dialog.Title>
+
+            {(error) && <ErrorMessage className='mt-2' error={error} />}
 
             <div className="mt-4 flex items-center space-x-4 justify-end">
                 <Button kind='danger' onClick={close}>No</Button>

@@ -33,6 +33,7 @@ const Home = () => {
     return (
         <div className="p-4">
             <div className="flex justify-end space-x-4">
+                <Button onClick={() => navigate("/dashboard")}>Dashboard</Button>
                 <Button onClick={() => navigate("/products")}>All Products</Button>
                 <Button onClick={handleLogout} kind="danger" className="uppercase">Logout</Button>
             </div>

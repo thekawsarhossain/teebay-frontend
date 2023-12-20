@@ -52,3 +52,47 @@ export const DELETE_PRODUCT = gql`mutation DeleteProduct($productId: ID!) {
       id
     }
   }`
+
+export const BUY_PRODUCT = gql`mutation BuyProduct($productId: ID!, $buyerId: ID!) {
+    buyProduct(productId: $productId, buyerId: $buyerId) {
+      id
+      product {
+        id
+        title
+        description
+        categories
+        price
+        rentPrice
+        rentOption
+        createdAt
+        owner {
+            id
+        }
+      }
+      type
+      createdAt
+    }
+  }
+`
+
+export const RENT_PRODUCT = gql`mutation RentProduct($productId: ID!, $renterId: ID!, $startTime: String!, $endTime: String!) {
+    rentProduct(productId: $productId, renterId: $renterId, startTime: $startTime, endTime: $endTime) {
+      id
+      product {
+        id
+          title
+          description
+          categories
+          price
+          rentPrice
+          rentOption
+          createdAt
+          owner {
+              id
+          }
+      }
+      startTime
+      endTime
+    }
+  }
+  `
