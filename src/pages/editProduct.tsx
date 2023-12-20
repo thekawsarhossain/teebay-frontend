@@ -90,7 +90,7 @@ const EditProduct = () => {
     };
 
     return (
-        <div className="w-full md:w-3/4 lg:w-2/4 mx-auto">
+        <div className="w-full md:w-3/4 lg:w-2/4 mx-auto my-6">
             {productLoading ?
                 <div className="h-screen flex items-center justify-center">
                     <Loading className="w-8 h-8" />
@@ -144,7 +144,7 @@ const EditProduct = () => {
                         </FormField>
                     </div>
 
-                    <div className="w-full mt-6 flex items-center space-x-4">
+                    <div className="w-full mt-6 flex flex-col md:flex-row items-center space-x-0 md:space-x-4 space-y-4 md:space-y-0">
                         <div className="flex flex-col gap-2 w-full">
                             <label>Price</label>
                             <FormField
@@ -165,7 +165,7 @@ const EditProduct = () => {
                             </FormField>
                         </div>
 
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 w-full">
                             <label>Rent</label>
                             <FormField
                                 required
